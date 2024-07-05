@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
+        integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+
+    <!-- JS -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"
+        integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+        integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+        crossorigin="anonymous"></script>
+
+    <!-- 구글폰트 -->
+    <link href="https://fonts.googleapis.com/css?family=Stylish&display=swap" rel="stylesheet">
+
+    <title>SW사관학교 정글 | </title>
+
+    <!-- style -->
+    <style type="text/css">
+        * {
+            font-family: "Stylish", sans-serif;
+        }
+        .wrap{
+            width:900px;
+            margin:auto;
+        }
+        .top-box{
+            height: 400px;
+            background-color: gainsboro;
+            margin : auto;
+        }
+        .title-input-box{
+            display:flex;
+            flex-direction: column;
+            gap : 10px;
+            width : 400px;
+            padding : 90px 20px ;
+        }
+        #card-list{
+            display: flex;
+            flex-direction: column;
+            flex-wrap : wrap;
+            gap : 10px;
+            margin: 30px 15px;
+            height: 300px;
+            width: 900px;
+        }
+        .card{
+            width:260px;
+            height:140px;
+            border: 1px solid gainsboro;
+        }
+    </style>
+    <!-- Script -->
+    <script>
+        $(document).ready(function () {
+            showMemo();
+        });
+        function delete_memo(){
+            var card= $(this).closest('.card');
+            console.log();
+        }
+        function showMemo() {
+            $("#card-list").html('')
+            $.ajax({
+                type: "GET",
+                url: "/memo",
+                data: {},
+                success: function (response) {
+                    let memo=response["data"]
+                    for (let i=0; i<memo.length;i++){
+                        let memo_title=memo[i]['title']
+                        let memo_content = memo[i]['content']
+                        let tempHtml = `<div class="card">
+                <h3 class='card-title'>${memo_title}</h3>
+                <p class='card-text'>${memo_content}</p>
+                <button type="button" onclick="showMod(this)">수정</button> 
+                <button type="button" onclick="deleteMemo(this)">삭제</button>
+
+                </div>`
+                        $("#card-list").append(tempHtml);
+                    }
+                }
+            })
+        }
+        function showMod(element){
+            let cardDiv=$(element).closest('.card');
+            let title = cardDiv.find('h3').text();
+            let content = cardDiv.find('p').text();
+            let tempHtml=`<div id="mod_box">
+            <div class="form_group">
+                    <input id="mod-title" type="text" class="form-control" value=${title}>
+                </div>
+                <div class="form_group">
+                    <textarea id="mod-text" class="form-control" rows="2">${content}</textarea>
+                </div>
+                <div>
+                <button type="submit" class="btn btn-primary" onclick="updateMemo(${title})">저장</button>
+                </div></div>`
+            cardDiv.html(tempHtml)    
+        }
+        function updateMemo(title){
+            let old_title=title
+            let new_title=$('#mod-title').val()
+            let comment=$('#mod-text').val()
+            $.ajax({
+                type : "POST",
+                url : "/memo/update",
+                data : {"old_title":title, "new_title":new_title,"comment":comment},
+                success : function(response){
+                    if (response['result']=='success'){
+                        alert(response['msg'])
+                        showMemo()
+                    } else {
+                        alert("서버 오류!")
+                    }
+                }                
+            })
+        }
+        function createMemo(){
+            let title = $('#input-title').val()
+            let content = $('#input-text').val()
+            $.ajax({
+                type : "POST",
+                url : "/memo",
+                data : {"title":title,"content":content},
+                success : function(response){
+                    if (response['result']=='success'){
+                        alert(response['msg'])
+                        showMemo()
+                    } else {
+                        alert("서버 오류!")
+                    }
+                }
+            })
+        }
+        function deleteMemo(element) {
+            let card = $(element).closest('.card');
+            let title = card.find('h3').text(); // 해당 카드의 제목 가져오기
+            $.ajax({
+                type : "POST",
+                url : "/memo/delete",
+                data : {"title":title},
+                success : function(response){
+                    if (response['result']=='success'){
+                        alert(response['msg'])
+                        showMemo()
+                    } else {
+                        alert("서버 오류!")
+                    }
+                }
+            })
+        }
+    </script>
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="top-box">
+            <div class="title-input-box">
+                <h1>나홀로메모장 <span style="background-color: gray;border-radius: 5px;">ver2.0</span></h1>
+                <div class="form_group">
+                    <input id="input-title" type="text" class="form-control" placeholder="메모 제목을 입력하세요">
+                </div>
+                <div class="form_group">
+                    <textarea id="input-text" placeholder="내용을 입력하세요" class="form-control" rows="2"></textarea>
+                </div>
+                <div>
+                <button type="submit" class="btn btn-primary" onclick="createMemo()">저장하기</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="card-list">
+            <div id="card">
+                <h3>첫번째 제목입니다</h3>
+                <p>첫번째 내용입니다</p>
+                <button>수정</button> <button type="button" onclick="deleteMemo()">삭제</button>
+            </div>
+            <div id="card">
+                <h3>두번째 제목입니다</h3>
+                <p>두번째 내용입니다</p>
+                <button>수정</button> <button type="button" onclick="deleteMemo()">삭제</button>
+            </div>
+            <div id="card">
+                <h3>세번째 제목입니다</h3>
+                <p>세번째 내용입니다</p>
+                <button>수정</button> <button type="button" onclick="deleteMemo()">삭제</button>
+            </div>
+            <div id="card">
+                <h3>네번째 제목입니다</h3>
+                <p>네번째 내용입니다</p>
+                <button>수정</button> <button type="button" onclick="deleteMemo()">삭제</button>
+            </div>
+            <div id="card">
+                <h3>다섯번째 제목입니다</h3>
+                <p>다섯번째 내용입니다</p>
+                <button>수정</button> <button type="button" onclick="deleteMemo()">삭제</button>
+            </div>
+
+        </div>
+    </div>
+</body>
+
+</html>
