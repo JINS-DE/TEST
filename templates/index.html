@@ -1,1 +1,260 @@
-안녕하세요
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>간단한 할 일 목록</title>
+    <!-- JS -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"
+        integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+        integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+        crossorigin="anonymous"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .btn-warning {
+            color: white;
+        }
+    </style>
+    <script>
+        $(document).ready(function () {
+            showTodo();
+        });
+        function showTodo() {
+            $('#todo-val').val('')
+            $('#todo-list').html("")
+            $.ajax({
+                type: "GET",
+                url: "/todo",
+                data: {},
+                success: function (response) {
+                    let todo_list = response["data"]
+
+                    for (let i = 0; i < todo_list.length; i++) {
+                        let todo = todo_list[i]['todoName']
+                        let done = todo_list[i]['done']
+                        let textHtml
+                        if (done === false) {
+                            textHtml = `
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                ${todo}
+                <span>
+                    <button class="btn btn-success btn-sm mr-1" onclick="completeTodo(this)">완료</button>
+                    <button class="btn btn-secondary btn-sm mr-1" onclick="editTodo(this)">수정</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteTodo('${todo}')">삭제</button>
+                </span>
+            </li>
+                            `
+                        } else {
+                            textHtml = `            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <del>${todo} </del>
+                <span>
+                    <button class="btn btn-info btn-sm mr-1" onclick="cancelComplete(this,'${todo}')" >완료 취소</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteTodo('${todo}')">삭제</button>
+                </span>
+            </li>`
+                        }
+                        $('#todo-list').append(textHtml)
+                    }
+                }
+            })
+            searchTodo()
+        }
+
+        function searchTodo() {
+            let searchTerm = $('#todo-val').val().toUpperCase();
+            $('#todo-list li').each(function() {
+                let todoText = $(this).text().toUpperCase();
+                if (todoText.includes(searchTerm)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        }
+        function makeTodo() {
+            let todo_val = $('#todo-val').val()
+            console.log(todo_val)
+            if (todo_val == '') {
+                alert("할 일을 입력해주세요!")
+            } else {
+                $.ajax({
+                    type: "POST",
+                    url: "/todo",
+                    data: { "todoName": todo_val },
+                    success: function (response) {
+                        if (response['result'] == 'success') {
+                            alert(response['msg'])
+                            showTodo()
+                        }
+                        else {
+                            alert('서버오류!')
+                        }
+                    }
+                })
+            }
+        }
+        // function editTodo(element){
+        //     let todoItem = $(element).closest('li');
+        //     let todo = todoItem.contents().first().text().trim();
+        //     todoItem.html("")
+        //     let tempHtml = `
+        //         <form action="/todo/update/${todo}" method="POST" class="form-inline w-75">
+        //             <input type="text" class="form-control mr-2 w-75" name="new_text" value="${todo}">
+        //             <button type="submit" class="btn btn-secondary btn-sm mr-1" onclick="updateTodo(this)">업데이트</button>
+        //             <button class="btn btn-warning btn-sm">취소</button>
+        //         </form>`
+        //     todoItem.append(tempHtml);
+        // }
+        function editTodo(element) {
+            let todoItem = $(element).closest('li');
+            let todo = todoItem.contents().first().text().trim();
+            todoItem.html("")
+            let tempHtml = `
+                <form class="form-inline w-75" onsubmit="return updateTodo(this,'${todo}')">
+                    <input type="text" class="form-control mr-2 w-75" name="new_text" value="${todo}">
+                    <button type="submit" class="btn btn-secondary btn-sm mr-1" >업데이트</button>
+                    <button type="button" onclick="cancleUpdate()"class="btn btn-warning btn-sm">취소</button>
+                </form>`
+            todoItem.append(tempHtml);
+        }
+        function cancleUpdate(){
+            window.location.href = '/';
+        }
+        function updateTodo(element, todo) {
+            let todoItem = $(element).closest('li');
+            let updateTodo = todoItem.find('input').val().trim();
+            if (updateTodo == '') {
+                alert("할 일을 입력해주세요!")
+                return false; // 함수 실행 중단
+            } else {
+                $.ajax({
+                    type: "POST",
+                    url: "/todo/update/name",
+                    data: { "new_todo": updateTodo, 'old_todo': todo },
+                    success: function (response) {
+                        if (response['result'] == 'success') {
+                            alert(response['msg'])
+                            showTodo()
+                        }
+                        else {
+                            alert('서버오류!')
+                        }
+                    }
+                })
+            }
+            return false; // 폼 제출 방지
+        }
+
+
+        function completeTodo(element) {
+            let todoItem = $(element).closest('li');
+            let todo = todoItem.contents().first().text().trim(); // li 요소 안의 텍스트 가져오기
+            tempHtml = `
+                    <del>${todo} </del>
+                    <span>
+                    <button class="btn btn-info btn-sm mr-1" onclick="cancelComplete(this,'${todo}')" >완료 취소</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteTodo('${todo}')">삭제</button>
+                </span>`
+            $.ajax({
+                type: "POST",
+                url: "/todo/update/done",
+                data: { 'update_todo': todo, 'done': true },
+                success: function (response) {
+                    alert("할 일 체크 완료!")
+                    todoItem.html(tempHtml);
+                }
+            })
+
+        }
+
+        function cancelComplete(element, todo) {
+            let todoItem = $(element).closest('li');
+            tempHtml = `
+                ${todo}
+                <span>
+                    <button class="btn btn-success btn-sm mr-1" onclick="completeTodo(this)">완료</button>
+                    <button class="btn btn-secondary btn-sm mr-1" onclick="editTodo(this)">수정</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteTodo('${todo}')">삭제</button>
+                </span>`
+            $.ajax({
+                type: "POST",
+                url: "/todo/update/done",
+                data: { 'update_todo': todo, 'done': false },
+                success: function (response) {
+                    alert("할 일 완료 취소!")
+                    todoItem.html(tempHtml);
+                }
+            })
+        }
+
+        function deleteTodo(todo) {
+            $.ajax({
+                type: "POST",
+                url: "/todo/delete",
+                data: { 'delete_todo': todo },
+                success: function (response) {
+                    if (response['result'] == 'success') {
+                        alert(response['msg'])
+                        showTodo()
+                    }
+                    else {
+                        alert('서버오류!')
+                    }
+                }
+            })
+        }
+
+    </script>
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">할 일 목록</h2>
+        <!-- 할 일 추가 폼 -->
+        <form class="form-inline mb-4">
+            <input id="todo-val" type="text" class="form-control mr-2 w-50" placeholder="새 할 일" oninput="searchTodo()">
+            <button type="button" class="btn btn-primary" onclick="makeTodo()">할 일 추가</button>
+        </form>
+
+        <!-- 할 일 목록 -->
+        <ul id="todo-list" class="list-group">
+            <!-- 예시 할 일 (기본 상태) -->
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                할 일 1
+                <span>
+                    <button class="btn btn-success btn-sm mr-1" onclick="completeTodo(this)">완료</button>
+                    <button class="btn btn-secondary btn-sm mr-1" onclick="editTodo(this)">수정</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteTodo(this)">삭제</button>
+                </span>
+            </li>
+
+            <!-- 예시 할 일 (완료 상태) -->
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <del>할 일 2 (완료)</del>
+                <span>
+                    <button class="btn btn-info btn-sm mr-1">완료 취소</button>
+                    <button class="btn btn-danger btn-sm">삭제</button>
+                </span>
+            </li>
+
+            <!-- 예시 할 일 (수정 상태) -->
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <form class="form-inline w-75">
+                    <input type="text" class="form-control mr-2 w-75" value="할 일 3 (수정)">
+                    <button type="submit" class="btn btn-secondary btn-sm mr-1">업데이트</button>
+                    <button class="btn btn-warning btn-sm">취소</button>
+                </form>
+            </li>
+            <!-- 추가 할 일이 여기에 추가됩니다 -->
+        </ul>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.js"
+        integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+
+</html>
