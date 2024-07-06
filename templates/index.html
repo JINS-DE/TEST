@@ -16,6 +16,7 @@
         .btn-warning {
             color: white;
         }
+
     </style>
     <script>
         $(document).ready(function () {
@@ -63,15 +64,13 @@
         }
 
         function searchTodo() {
-            let searchTerm = $('#todo-val').val().toUpperCase();
-            $('#todo-list li').each(function() {
-                let todoText = $(this).text().toUpperCase();
-                if (todoText.includes(searchTerm)) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
+            let searchTerm = $('#todo-val').val().toLowerCase();
+            let todoText = $(this).text().toLowerCase();
+            if (todoText.includes(searchTerm)) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            };
         }
         function makeTodo() {
             let todo_val = $('#todo-val').val()
@@ -214,7 +213,14 @@
         <h2 class="text-center mb-4">할 일 목록</h2>
         <!-- 할 일 추가 폼 -->
         <form class="form-inline mb-4">
-            <input id="todo-val" type="text" class="form-control mr-2 w-50" placeholder="새 할 일" oninput="searchTodo()">
+            <input id="todo-val" type="text" class="form-control mr-2 w-50" placeholder="새 할 일" list="search-suggestions" oninput="searchTodo()">
+            <datalist id="search-suggestions">
+                <option value="헬스장 등록하기">
+                <option value="자전거 1km 타기">
+                <option value="매일 코딩 공부하기">
+                <option value="나만의 웹 사이트 만들기">
+                <option value="매일 걷기 5분하기">
+            </datalist>
             <button type="button" class="btn btn-primary" onclick="makeTodo()">할 일 추가</button>
         </form>
 

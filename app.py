@@ -39,12 +39,6 @@ def update_done():
     db.todo.update_one({'todoName':todoName},{'$set':{"done":done}})
     return jsonify({'result':'success'})
 
-# 업데이트 name
-# @app.route("/todo/update/<string:id>", methods=['POST'])
-# def update_name(id):
-#     new_todo = request.form['new_text']
-#     db.todo.update_one({'todoName': id}, {'$set': {"todoName": new_todo}})
-#     return redirect('/')
 
 @app.route("/todo/update/name", methods=['POST'])
 def update_name():
