@@ -1,23 +1,23 @@
-from flask import Flask, render_template, jsonify, request, redirect
-import requests
-from bs4 import BeautifulSoup
+from flask import Flask, render_template, jsonify, request
 from pymongo import MongoClient  
 
 app = Flask(__name__)
 
-client = MongoClient('mongodb+srv://sparta:jungle@cluster0.gsunejv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')  # MongoDB Altas 사이트의 링크를 가져옵니다
+client = MongoClient('mongodb+srv://:@cluster0.gsunejv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')  # MongoDB Altas 사이트의 링크를 가져옵니다
 db = client.dbjungle 
 
 # index
 @app.route('/')
 def home():
     return render_template('index.html')
+
 # todo리스트 둥록
 @app.route('/todo', methods=['POST'])
 def create_todo():
     todoName=request.form['todoName']
     db.todo.insert_one({'todoName':todoName,'done':False})
     return jsonify({'result':'success','msg':'등록 완료!'})
+
 # DB 투두리스트 가져오기
 @app.route('/todo', methods=['GET'])
 def read_todo():
@@ -46,9 +46,6 @@ def update_name():
     new_todo = request.form['new_todo']
     db.todo.update_one({'todoName': old_todo}, {'$set': {"todoName": new_todo}})
     return jsonify({'result':'success','msg':'할 일 업데이트 완료!'})
-
-    
-
 
 #삭제
 @app.route("/todo/delete", methods=['POST'])

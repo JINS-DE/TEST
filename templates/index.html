@@ -94,18 +94,6 @@
                 })
             }
         }
-        // function editTodo(element){
-        //     let todoItem = $(element).closest('li');
-        //     let todo = todoItem.contents().first().text().trim();
-        //     todoItem.html("")
-        //     let tempHtml = `
-        //         <form action="/todo/update/${todo}" method="POST" class="form-inline w-75">
-        //             <input type="text" class="form-control mr-2 w-75" name="new_text" value="${todo}">
-        //             <button type="submit" class="btn btn-secondary btn-sm mr-1" onclick="updateTodo(this)">업데이트</button>
-        //             <button class="btn btn-warning btn-sm">취소</button>
-        //         </form>`
-        //     todoItem.append(tempHtml);
-        // }
         function editTodo(element) {
             let todoItem = $(element).closest('li');
             let todo = todoItem.contents().first().text().trim();
